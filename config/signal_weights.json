@@ -1,0 +1,66 @@
+{
+  "version": 31,
+  "last_updated": null,
+  "notes": "v31 \u2014 Order Block + Volume (OBV) strategy. Replaces the v30 multi-confluence scorer. Every trade requires a volume-confirmed Order Block (fresh or first retest only) plus live volume confirmation at entry.",
+  "weights": {
+    "ob_zone_fresh": 5.0,
+    "ob_zone_retest": 3.0,
+    "ob_multi_confluence": 2.0,
+    "ob_high_strength": 1.5,
+    "ob_impulse_volume": 3.5,
+    "live_volume_spike": 3.0,
+    "rvol_rising": 1.5,
+    "regime_aligned": 1.0,
+    "volume_climax_exhaustion": -3.5,
+    "low_volume_grind": -2.0,
+    "against_trend": -4.0,
+    "chop_zone": -3.0,
+    "lunch_hour": -5.0,
+    "late_session": -3.0,
+    "overtraded_day": -6.0
+  },
+  "thresholds": {
+    "min_signal_score": 7,
+    "min_rr_ratio": 1.5,
+    "min_confidence": 60
+  },
+  "sl_config": {
+    "method": "order_block",
+    "sl_buffer_pts": 5.0,
+    "min_sl_pts": 12.0,
+    "default_target_rr": 2.0,
+    "comment": "SL sits just beyond the far edge of the traded Order Block. Target defaults to 2R, or the nearest opposing Order Block if closer."
+  },
+  "volume_config": {
+    "ob_impulse_rvol_multiplier": 1.5,
+    "live_volume_spike_rvol": 2.0,
+    "climax_rvol": 3.5,
+    "low_rvol": 0.6,
+    "ob_proximity_pts": 100.0,
+    "comment": "RVOL = current bar volume / rolling 20-bar average volume."
+  },
+  "time_filters": {
+    "trading_start": "09:20",
+    "no_new_trades": "14:30",
+    "lunch_avoid_from": "11:30",
+    "lunch_avoid_to": "13:00",
+    "comment": "No new trades after 14:30 \u2014 option premium decay kills entries"
+  },
+  "trade_limits": {
+    "max_trades_per_day": 2,
+    "cooldown_seconds": 600,
+    "comment": "Hard cap to avoid overtrading / chasing OB retests all day."
+  },
+  "mandatory_gates": {
+    "require_volume_confirmed_order_block": true,
+    "max_ob_retest_count": 1,
+    "require_live_volume_confirmation": true,
+    "comment": "No trade fires without a volume-confirmed Order Block (fresh or first retest) AND live volume confirmation (impulse RVOL or current-candle RVOL spike)."
+  },
+  "trade_stats": {
+    "total_trades": 0,
+    "winning_trades": 0,
+    "losing_trades": 0,
+    "win_rate": 0.0
+  }
+}

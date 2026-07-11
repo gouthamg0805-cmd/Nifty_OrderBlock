@@ -1,0 +1,63 @@
+{
+  "version": 3,
+  "last_updated": null,
+  "notes": "v30.1 \u2014 FVG proximity fix, chop_zone fix, min_score=9",
+  "weights": {
+    "fvg_confluence": 4.5,
+    "order_block_confluence": 4.0,
+    "pdh_pdl_respect": 3.5,
+    "market_structure_aligned": 3.0,
+    "opening_drive_aligned": 2.5,
+    "ema_1h_trend_aligned": 3.0,
+    "breakout_confirmed": 2.5,
+    "volume_spike": 2.5,
+    "vwap_aligned": 2.0,
+    "ema_9_21_aligned": 1.5,
+    "momentum_strong": 1.5,
+    "rsi_confirmation": 1.0,
+    "engulfing_pattern": 2.0,
+    "rejection_wick": 2.0,
+    "support_resistance_bounce": 1.5,
+    "against_trend": -5.0,
+    "chop_zone": -4.0,
+    "weak_candle": -2.5,
+    "lunch_hour": -5.0,
+    "low_volume": -2.0,
+    "late_session": -3.0,
+    "overtraded_day": -6.0
+  },
+  "thresholds": {
+    "min_signal_score": 9,
+    "min_rr_ratio": 1.8,
+    "min_confidence": 68
+  },
+  "sl_config": {
+    "atr_sl_multiplier": 1.2,
+    "min_sl_pts": 10,
+    "target_rr": 2.0,
+    "comment": "Wider SL vs v23 (was 0.8 ATR). Fewer false stop-outs = better win rate."
+  },
+  "time_filters": {
+    "trading_start": "09:20",
+    "no_new_trades": "14:30",
+    "lunch_avoid_from": "11:30",
+    "lunch_avoid_to": "13:00",
+    "comment": "No new trades after 14:30 \u2014 option premium decay kills entries"
+  },
+  "trade_limits": {
+    "max_trades_per_day": 2,
+    "cooldown_seconds": 600,
+    "comment": "Hard cap. Over-trading was the #1 cause of poor win rate in v23."
+  },
+  "mandatory_gates": {
+    "require_fvg_or_ob_or_pdh": true,
+    "min_positive_signals": 3,
+    "comment": "At least one structural signal (FVG/OB/PDH-PDL) must be present. No random EMA crosses."
+  },
+  "trade_stats": {
+    "total_trades": 0,
+    "winning_trades": 0,
+    "losing_trades": 0,
+    "win_rate": 0.0
+  }
+}

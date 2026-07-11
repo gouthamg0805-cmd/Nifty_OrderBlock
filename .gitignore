@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+env/
+.env/
+.venv/
+
+# Credentials (NEVER commit)
+config/settings.env
+config/*.env
+!config/settings.example.env
+
+# Logs & DB
+logs/*.log
+logs/*.db
+logs/*.db-journal
+
+# Backtest results (large files)
+backtest/results/*.csv
+backtest/results/*.png
+backtest/results/*.json
+data/cache/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Neo Kotak session token (contains auth data — never commit)
+config/.session
