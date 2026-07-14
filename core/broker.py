@@ -194,15 +194,14 @@ class BrokerClient:
                     f"  python dashboard/login.py  →  http://localhost:8051"
                 )
                 from core.message_bus import bus
-                import asyncio
-                try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        asyncio.create_task(bus.publish_event("session_expired", {
-                            "error": err_msg, "context": context
-                        }))
-                except Exception:
-                    pass
+                # NOTE: this can run on a worker thread (blocking broker calls
+                # are typically invoked via loop.run_in_executor), which has
+                # no event loop of its own. asyncio.get_event_loop() /
+                # create_task() will raise "There is no current event loop in
+                # thread '...'" there — use the thread-safe bus helper instead.
+                bus.publish_event_threadsafe("session_expired", {
+                    "error": err_msg, "context": context
+                })
                 raise SessionExpiredError(
                     f"Kotak session expired: {err_msg}\n"
                     f"Please log in again via: python dashboard/login.py"

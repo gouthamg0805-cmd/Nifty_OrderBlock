@@ -91,7 +91,7 @@ class DataFetcher:
         self._spot_cache   = None
         self._spot_ts      = 0.0
         self._candle_cache: dict[str, pd.DataFrame] = {}
-        self._yf_blocked   = False
+        self._yf_blocked_until = 0.0   # monotonic timestamp; 0 = not blocked
 
         # ── Instrument config (NIFTY or SENSEX) ──────────────────────────
         instrument = instrument.upper().strip()
@@ -134,7 +134,7 @@ class DataFetcher:
                 return price
 
         # 2. yfinance fallback (paper mode / broker unavailable)
-        if not self._yf_blocked:
+        if time.time() >= self._yf_blocked_until:
             price = await self._spot_via_yfinance()
             if price:
                 self._spot_cache = price
@@ -186,10 +186,11 @@ class DataFetcher:
                         return p
             except Exception as e:
                 logger.debug(f"[Fetcher] yfinance spot error: {e}")
-                self._yf_blocked = True
-                asyncio.get_event_loop().call_later(
-                    300, lambda: setattr(self, "_yf_blocked", False)
-                )
+                # NOTE: this runs on a worker thread (via run_in_executor), so
+                # it must not touch asyncio.get_event_loop()/call_later — that
+                # raises "There is no current event loop in thread '...'" on
+                # non-main threads. A plain timestamp is thread-safe.
+                self._yf_blocked_until = time.time() + 300
             return None
         return await loop.run_in_executor(None, _call)
 
@@ -421,16 +422,15 @@ class DataFetcher:
 
             # Broadcast session expired if detected
             if not session_ok[0]:
-                try:
-                    import asyncio as _a
-                    from core.message_bus import bus as _b
-                    _l = _a.get_event_loop()
-                    if _l.is_running():
-                        _a.create_task(_b.publish_event("session_expired", {
-                            "context": "options_chain"
-                        }))
-                except Exception:
-                    pass
+                # NOTE: this runs inside run_in_executor's worker thread, so
+                # asyncio.get_event_loop()/create_task() is unsafe here (raises
+                # "There is no current event loop in thread '...'"). Use the
+                # thread-safe bus helper instead, which schedules onto the
+                # bound main loop via run_coroutine_threadsafe.
+                from core.message_bus import bus as _b
+                _b.publish_event_threadsafe("session_expired", {
+                    "context": "options_chain"
+                })
 
             return results
 

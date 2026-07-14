@@ -19,6 +19,16 @@ class MessageBus:
     def __init__(self):
         self._queues: Dict[str, List[asyncio.Queue]] = {}
         self._running = False
+        self.loop: asyncio.AbstractEventLoop | None = None
+
+    def bind_loop(self, loop: asyncio.AbstractEventLoop | None = None):
+        """
+        Record the main event loop so code running on OTHER threads (e.g.
+        blocking broker calls executed via loop.run_in_executor, which run on
+        a worker thread with no event loop of its own) can still publish
+        safely. Call this once, from inside the running loop, at startup.
+        """
+        self.loop = loop or asyncio.get_running_loop()
 
     def subscribe(self, topic: str) -> asyncio.Queue:
         q = asyncio.Queue(maxsize=100)
@@ -37,6 +47,26 @@ class MessageBus:
 
     async def publish_event(self, event_type: str, data: Any = None):
         await self.publish("system_event", {"event": event_type, "data": data})
+
+    def publish_event_threadsafe(self, event_type: str, data: Any = None):
+        """
+        Safe to call from ANY thread, including non-event-loop worker threads
+        (e.g. inside a blocking call running via run_in_executor). Schedules
+        the publish onto the bound main loop instead of trying to fetch/create
+        an event loop on the calling thread, which raises
+        'There is no current event loop in thread ...' on worker threads.
+        """
+        if self.loop is None or not self.loop.is_running():
+            logger.debug(
+                f"[MessageBus] No bound running loop — dropping event '{event_type}'"
+            )
+            return
+        try:
+            asyncio.run_coroutine_threadsafe(
+                self.publish_event(event_type, data), self.loop
+            )
+        except Exception as e:
+            logger.debug(f"[MessageBus] publish_event_threadsafe failed: {e}")
 
 
 # Global singleton

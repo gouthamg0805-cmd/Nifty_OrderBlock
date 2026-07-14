@@ -95,6 +95,8 @@ class TradingSystem:
 
         # Setup graceful shutdown
         loop = asyncio.get_running_loop()
+        bus.bind_loop(loop)   # lets worker threads (broker calls via
+                               # run_in_executor) publish events safely
         for sig in (signal.SIGINT, signal.SIGTERM):
             loop.add_signal_handler(sig, lambda: asyncio.create_task(self._shutdown()))
 
